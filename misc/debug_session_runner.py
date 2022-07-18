@@ -1,20 +1,21 @@
+import logging
 import time
 from pathlib import Path
-from device import CartPoleDevice, DeviceTarget
-from sessions.actor import Actor
-from sessions.collector import CollectorProxy
-from common.interface import Config, CartPoleBase
+
+from common.interface import CartPoleBase, Config
 from common.util import init_logging
+from control.calibration import Calibrator
+from device import CartPoleDevice, DeviceTarget
 from misc.analyzer._saleae import SaleaeAnalyzer
-import logging
-# Actor imports
-from misc.oscillating_actor import OscillatingActor
+from misc.const_actor import ConstantActor
 # from misc.lqr_actor import LinearBalanceControl
 from misc.demo_actor import DemoActor
-from misc.const_actor import ConstantActor
-from control.calibration import Calibrator
+# Actor imports
+from misc.oscillating_actor import OscillatingActor
+from sessions.actor import Actor
+from sessions.collector import CollectorProxy
 
-LOGGER = logging.getLogger('debug-session-runner')
+LOGGER = logging.getLogger("debug-session-runner")
 
 
 def control_loop(device: CartPoleBase, actor: Actor, max_duration: float):
@@ -28,28 +29,31 @@ def control_loop(device: CartPoleBase, actor: Actor, max_duration: float):
         device.advance()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     from common.util import init_logging
 
     init_logging()
 
-    SESSION_ID = 'calibrate + top_pos'
+    SESSION_ID = "calibrate + top_pos"
     ACTOR_CLASS = DemoActor
     DEVICE_CONFIG = Config(
         max_position=0.26,
         max_velocity=5,
         max_acceleration=10.0,
         clamp_velocity=True,
-        clamp_acceleration=True, )
-    ACTOR_CONFIG = dict(config=Config(
-        max_position=0.20,
-        max_velocity=4,
-        max_acceleration=10.0,
-        pole_length=0.28,
-    ))
+        clamp_acceleration=True,
+    )
+    ACTOR_CONFIG = dict(
+        config=Config(
+            max_position=0.20,
+            max_velocity=4,
+            max_acceleration=10.0,
+            pole_length=0.28,
+        )
+    )
 
     SESSION_MAX_DURATION = 40.0
-    OUTPUT_PATH = Path(f'data/sessions/{SESSION_ID}')
+    OUTPUT_PATH = Path(f"data/sessions/{SESSION_ID}")
     init_logging()
     device = CartPoleDevice()
     # analyzer = SaleaeAnalyzer()
@@ -68,24 +72,25 @@ if __name__ == '__main__':
         device.prev_angle = 0
         time.sleep(3.0)
         ACTOR_CONFIG["config"] = new_config
-        #proxy.actor_config["pole_length"] = new_config.pole_length
+        # proxy.actor_config["pole_length"] = new_config.pole_length
 
-         #proxy = CollectorProxy(
+        # proxy = CollectorProxy(
         #     cart_pole=device,
         #     actor_class=ACTOR_CLASS,
         #     actor_config=ACTOR_CONFIG,
         #     # reset_callbacks=[analyzer.start],
         #     # close_callbacks=[analyzer.stop],
         # )
-        #proxy.reset(new_config)
-        actor = DemoActor(config=Config(
-            max_position=0.20,
-            max_velocity=4,
-            max_acceleration=10.0,
-            pole_length=new_config.pole_length
-        ))
+        # proxy.reset(new_config)
+        actor = DemoActor(
+            config=Config(
+                max_position=0.20,
+                max_velocity=4,
+                max_acceleration=10.0,
+                pole_length=new_config.pole_length,
+            )
+        )
         actor.proxy = proxy
-
 
         # LOGGER.info(">>>")
         # device.interface.set(DeviceTarget(position=0.05))
@@ -93,10 +98,10 @@ if __name__ == '__main__':
         control_loop(proxy, actor, max_duration=SESSION_MAX_DURATION)
         # print(length)
     except Exception:
-        LOGGER.exception('Aborting run due to error')
+        LOGGER.exception("Aborting run due to error")
     finally:
         proxy.close()
-        LOGGER.info('Run finished')
+        LOGGER.info("Run finished")
 
-    proxy.save(OUTPUT_PATH / 'session.json')
+    proxy.save(OUTPUT_PATH / "session.json")
     # analyzer.save(OUTPUT_PATH)

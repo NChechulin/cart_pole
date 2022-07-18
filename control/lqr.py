@@ -1,13 +1,13 @@
-from pydrake.systems.controllers import LinearQuadraticRegulator
-from pydrake.systems.controllers import FiniteHorizonLinearQuadraticRegulator
-from pydrake.systems.controllers import FiniteHorizonLinearQuadraticRegulatorOptions
+import math
+
+import numpy
+from pydrake.systems.controllers import (
+    FiniteHorizonLinearQuadraticRegulator,
+    FiniteHorizonLinearQuadraticRegulatorOptions, LinearQuadraticRegulator)
 from pydrake.systems.primitives import Linearize
 
 from common import Config, Error, State
 from simulator.system import CartPoleSystem
-
-import math
-import numpy
 
 
 class BalanceLQRControl:
@@ -16,7 +16,7 @@ class BalanceLQRControl:
             cart_position=0,
             cart_velocity=0,
             pole_angle=math.pi,
-            pole_angular_velocity=0
+            pole_angular_velocity=0,
         )
 
         self.q0 = state.as_array()
@@ -64,7 +64,7 @@ class TrajectoryLQRControl:
             tf=options.u0.end_time(),
             Q=Q,
             R=R,
-            options=options
+            options=options,
         )
 
     def __call__(self, stamp, state):

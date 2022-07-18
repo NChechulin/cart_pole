@@ -1,11 +1,13 @@
-from common import Config, State
-from math import sin, cos
-from IPython.display import HTML
+import json
+import time
+from math import cos, sin
+
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.signal
-import json
-import time
+from IPython.display import HTML
+
+from common import Config, State
 
 
 class Calibrator:
@@ -28,22 +30,35 @@ class Calibrator:
         return dist
 
     def _pos_turned_positive(self):
-        return (self.raw_data[-1]["state"].cart_position >= self._braking_distance()) \
-               and (self.raw_data[-4]["state"].cart_position <= self._braking_distance()) \
-               and (self._last_acc_change_timestamp + 0.15 < self.raw_data[-1]["timestamp"])
+        return (
+            (self.raw_data[-1]["state"].cart_position >= self._braking_distance())
+            and (self.raw_data[-4]["state"].cart_position <= self._braking_distance())
+            and (
+                self._last_acc_change_timestamp + 0.15 < self.raw_data[-1]["timestamp"]
+            )
+        )
 
     def _pos_turned_negative(self):
-        return (self.raw_data[-1]["state"].cart_position <= self._braking_distance()) \
-               and (self.raw_data[-4]["state"].cart_position >= self._braking_distance()) \
-               and (self._last_acc_change_timestamp + 0.15 < self.raw_data[-1]["timestamp"])
+        return (
+            (self.raw_data[-1]["state"].cart_position <= self._braking_distance())
+            and (self.raw_data[-4]["state"].cart_position >= self._braking_distance())
+            and (
+                self._last_acc_change_timestamp + 0.15 < self.raw_data[-1]["timestamp"]
+            )
+        )
 
     def _reset(self):
         self._cart_pole.reset(self.config)  # todo: update config's max_position
         time.sleep(3.0)
 
         self._length = self.config.max_position * 0.75
-        self._acceleration = (min(self.config.max_acceleration, (self.config.max_velocity ** 2) / (2 * self._length))
-                              / (self._moves_num + 1)) * 0.5
+        self._acceleration = (
+            min(
+                self.config.max_acceleration,
+                (self.config.max_velocity**2) / (2 * self._length),
+            )
+            / (self._moves_num + 1)
+        ) * 0.5
         self._first_acc_duration = (self._length / self._acceleration) ** 0.5
         self._zero_angle = self._cart_pole.get_state().pole_angle
 
@@ -61,7 +76,9 @@ class Calibrator:
             state = self._cart_pole.get_state()
             state.pole_angle -= self._zero_angle
             timestamp = self._cart_pole.timestamp() - self._start_timestamp
-            self.raw_data.append({"state": state, "timestamp": timestamp, "target": target})
+            self.raw_data.append(
+                {"state": state, "timestamp": timestamp, "target": target}
+            )
 
         target = -target
 
@@ -70,7 +87,9 @@ class Calibrator:
             state = self._cart_pole.get_state()
             state.pole_angle -= self._zero_angle
             timestamp = self._cart_pole.timestamp() - self._start_timestamp
-            self.raw_data.append({"state": state, "timestamp": timestamp, "target": target})
+            self.raw_data.append(
+                {"state": state, "timestamp": timestamp, "target": target}
+            )
 
             if self._pos_turned_negative():
                 move_index += 1
@@ -96,34 +115,58 @@ class Calibrator:
             timestamps.append(self.raw_data[i]["timestamp"])
             angles.append(self.raw_data[i]["state"].pole_angle)
             targets.append(self.raw_data[i]["target"])
-        angles = scipy.signal.savgol_filter(angles, 21, 3)  # window size 21, polynomial order 3
+        angles = scipy.signal.savgol_filter(
+            angles, 21, 3
+        )  # window size 21, polynomial order 3
 
         for i in range(omega_delta, len(angles) - omega_delta):
             angle_delta = angles[i + omega_delta] - angles[i - omega_delta]
             time_delta = timestamps[i + omega_delta] - timestamps[i - omega_delta]
             omegas.append(angle_delta / time_delta)
-        omegas = scipy.signal.savgol_filter(omegas, 15, 3)  # window size 15, polynomial order 3
+        omegas = scipy.signal.savgol_filter(
+            omegas, 15, 3
+        )  # window size 15, polynomial order 3
 
         for i in range(0, len(omegas) - epsilon_indent):
             omega_delta = omegas[i + epsilon_indent] - omegas[i]
-            time_delta = timestamps[i + epsilon_indent + omega_delta] - timestamps[i + omega_delta]
+            time_delta = (
+                timestamps[i + epsilon_indent + omega_delta]
+                - timestamps[i + omega_delta]
+            )
             epsilons.append(omega_delta / time_delta)
-        epsilons = list(scipy.signal.savgol_filter(epsilons, 15, 3))  # window size 15, polynomial order 3
+        epsilons = list(
+            scipy.signal.savgol_filter(epsilons, 15, 3)
+        )  # window size 15, polynomial order 3
 
-        angles = angles[omega_delta:(- epsilon_indent - omega_delta)]
-        timestamps = timestamps[omega_delta:(- epsilon_indent - omega_delta)]
-        targets = targets[omega_delta:(- epsilon_indent - omega_delta)]
+        angles = angles[omega_delta : (-epsilon_indent - omega_delta)]
+        timestamps = timestamps[omega_delta : (-epsilon_indent - omega_delta)]
+        targets = targets[omega_delta : (-epsilon_indent - omega_delta)]
         omegas = omegas[:(-epsilon_indent)]
 
         for i in range(len(angles)):
-            expressions.append(-((targets[i] * cos(angles[i])) + (self.config.gravity * sin(angles[i]))))
-            self.processed_data.append({"angle": angles[i], "omega": omegas[i], "epsilon": epsilons[i],
-                                        "timestamp": timestamps[i], "target": targets[i], "expression": expressions[i]})
+            expressions.append(
+                -(
+                    (targets[i] * cos(angles[i]))
+                    + (self.config.gravity * sin(angles[i]))
+                )
+            )
+            self.processed_data.append(
+                {
+                    "angle": angles[i],
+                    "omega": omegas[i],
+                    "epsilon": epsilons[i],
+                    "timestamp": timestamps[i],
+                    "target": targets[i],
+                    "expression": expressions[i],
+                }
+            )
 
         A = np.array(expressions)
         B = np.vstack([np.array(epsilons), np.zeros(len(epsilons))]).T
 
-        self.config.pole_length, self.config.friction_coefficient = np.linalg.lstsq(B, A)[0]
+        self.config.pole_length, self.config.friction_coefficient = np.linalg.lstsq(
+            B, A
+        )[0]
 
     def calibrate(self, moves_num=10):
         self._moves_num = moves_num
@@ -136,11 +179,11 @@ class Calibrator:
         return self.config
 
     def save_processed_data(self):
-        with open("processed_data.json", 'w') as file:
+        with open("processed_data.json", "w") as file:
             json.dump(self.processed_data, file)
 
     def save_raw_data(self):
-        with open("raw_data.json", 'w') as file:
+        with open("raw_data.json", "w") as file:
             json.dump(self.processed_data, file)
 
     def import_data(self):

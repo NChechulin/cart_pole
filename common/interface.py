@@ -1,5 +1,5 @@
-import enum
 import dataclasses as dc
+import enum
 
 import numpy as np
 
@@ -49,14 +49,14 @@ class State:
 
     @staticmethod
     def from_array(a):
-        '''
+        """
         q = (x, a, v, w)
-        '''
+        """
         return State(a[0], a[2], a[1], a[3])
 
     @staticmethod
     def home():
-        return State(.0, .0, .0, .0)
+        return State(0.0, 0.0, 0.0, 0.0)
 
     def as_tuple(self):
         return (
@@ -73,17 +73,17 @@ class State:
         return self.as_array().reshape(4, 1)
 
     def __repr__(self):
-        return '(x={x:+.2f}, v={v:+.2f}, a={a:+.2f}, w={w:+.2f}, err={err})'.format(
-            x = self.cart_position,
-            v = self.cart_velocity,
-            a = self.pole_angle,
-            w = self.pole_angular_velocity,
+        return "(x={x:+.2f}, v={v:+.2f}, a={a:+.2f}, w={w:+.2f}, err={err})".format(
+            x=self.cart_position,
+            v=self.cart_velocity,
+            a=self.pole_angle,
+            w=self.pole_angular_velocity,
             err=self.error,
         )
 
 
 class CartPoleBase:
-    '''
+    """
     Description:
         Сlass implements a physical simulation of the cart-pole device.
         A pole is attached by an joint to a cart, which moves along guide axis.
@@ -94,54 +94,54 @@ class CartPoleBase:
         described by Barto, Sutton, and Anderson
     Initial state:
         A pole is at starting position 0 with no velocity and acceleration.
-    '''
+    """
 
     def reset(self, config: Config) -> None:
-        '''
+        """
         Resets the device to the initial state.
         The pole is at rest position and cart is centered.
         It must be called at the beginning of any session.
-        '''
+        """
         raise NotImplementedError
 
     def get_state(self) -> State:
-        '''
+        """
         Returns current device state.
-        '''
+        """
         raise NotImplementedError
 
     def get_info(self) -> dict:
-        '''
+        """
         Returns usefull debug information.
-        '''
+        """
         raise NotImplementedError
 
     def get_target(self) -> float:
-        '''
+        """
         Returns current target acceleration.
-        '''
+        """
         raise NotImplementedError
 
     def set_target(self, target: float) -> None:
-        '''
+        """
         Set desired target acceleration.
-        '''
+        """
         raise NotImplementedError
 
     def advance(self, delta: float = None) -> None:
-        '''
+        """
         Advance the dynamic system by delta seconds.
-        '''
+        """
         pass
 
     def timestamp(self):
-        '''
+        """
         Current time.
-        '''
+        """
         raise NotImplementedError
 
     def close(self) -> None:
-        '''
+        """
         Free all allocated resources.
-        '''
+        """
         raise NotImplementedError

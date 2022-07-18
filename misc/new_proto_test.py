@@ -1,9 +1,11 @@
-from device import ProtobufWireInterface, DeviceConfig, DeviceState, DeviceTarget
-from common.util import init_logging
 import logging
 import time
 
-if __name__ == '__main__':
+from common.util import init_logging
+from device import (DeviceConfig, DeviceState, DeviceTarget,
+                    ProtobufWireInterface)
+
+if __name__ == "__main__":
 
     # debug_message = proto.Response()
     # debug_message.status = proto.ResponseStatus.DEBUG
@@ -32,10 +34,10 @@ if __name__ == '__main__':
     start = time.perf_counter()
     packets_count = 1000
     for _ in range(packets_count):
-        logging.info('GET ALL')
+        logging.info("GET ALL")
         logging.info(interface.get(DeviceState()))
         # logging.info(interface.get(DeviceConfig()))
         # logging.info(interface.get(DeviceTarget()))
     delta = time.perf_counter() - start
     freq = packets_count / delta
-    print(f'{packets_count} packets in {delta:.3f} s = {freq:.3f} Hz')
+    print(f"{packets_count} packets in {delta:.3f} s = {freq:.3f} Hz")

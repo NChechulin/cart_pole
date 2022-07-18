@@ -1,5 +1,6 @@
-import numpy as np
 import math
+
+import numpy as np
 
 
 class Model:
@@ -10,11 +11,7 @@ class Model:
         self.coef = 1.5 * self.params.pole_length
 
         self.A = np.array(
-            [[0, 0, 1, 0],
-             [0, 0, 0, 1],
-             [0, 0, 0, 0],
-             [0, 0, 0, 0]],
-            dtype=np.float32
+            [[0, 0, 1, 0], [0, 0, 0, 1], [0, 0, 0, 0], [0, 0, 0, 0]], dtype=np.float32
         )
 
         self.B = np.array([[0], [0], [1], [0]], dtype=np.float32)
@@ -24,7 +21,9 @@ class Model:
         cos_theta = math.cos(theta)
         sin_theta = math.sin(theta)
 
-        self.A[3][1] = self.coef * (u[0][0]*sin_theta - self.params.gravity*cos_theta)
+        self.A[3][1] = self.coef * (
+            u[0][0] * sin_theta - self.params.gravity * cos_theta
+        )
         self.B[3][0] = -self.coef * cos_theta
 
         return self.A, self.B

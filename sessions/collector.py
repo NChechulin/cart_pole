@@ -1,40 +1,39 @@
 import copy
 import dataclasses as dc
+import inspect
 import json
 import logging
-from pathlib import Path
-
-import numpy as np
-import inspect
 import string
 import threading
 import time
-from contextlib import contextmanager
 from collections import defaultdict
+from contextlib import contextmanager
 from io import StringIO
-from typing import Callable, List, Dict, Type, Tuple, Union
+from pathlib import Path
+from typing import Callable, Dict, List, Tuple, Type, Union
+
 import dacite
+import numpy as np
 
 from common.interface import CartPoleBase, Config, State
 from common.util import init_logging
 from sessions.actor import Actor
-
 
 LOGGER = logging.getLogger(__name__)
 HEX_DIGITS = list(string.digits + string.ascii_lowercase[:6])
 
 
 def generate_id(size: int = 6):
-    return ''.join(np.random.choice(HEX_DIGITS, size=size, replace=True))
+    return "".join(np.random.choice(HEX_DIGITS, size=size, replace=True))
 
 
 class Units:
-    METERS = 'm'
-    METERS_PER_SECOND = 'm/s'
-    METERS_PER_SECOND_SQUARED = 'm/s^2'
-    RADIANS = 'rad'
-    RADIANS_PER_SECOND = 'rad/s'
-    UNKNOWN = '?'
+    METERS = "m"
+    METERS_PER_SECOND = "m/s"
+    METERS_PER_SECOND_SQUARED = "m/s^2"
+    RADIANS = "rad"
+    RADIANS_PER_SECOND = "rad/s"
+    UNKNOWN = "?"
 
 
 @dc.dataclass
@@ -101,7 +100,7 @@ class SessionData:
     #     ]
 
     @classmethod
-    def load(cls, path: Union[str, Path]) -> 'SessionData':
+    def load(cls, path: Union[str, Path]) -> "SessionData":
         with open(path) as file:
             raw_data = json.load(file)
             parse_config = dacite.Config(check_types=False)
@@ -110,10 +109,10 @@ class SessionData:
 
 class CollectorProxy(CartPoleBase):
     LOGGING_FORMAT = (
-        '%(created)f [%(levelname)s] %(name)s (%(filename)s:%(lineno)d) :: %(message)s'
+        "%(created)f [%(levelname)s] %(name)s (%(filename)s:%(lineno)d) :: %(message)s"
     )
-    HUMAN_LOGGING_FORMAT = '%(asctime)s [%(levelname)s] %(name)s :: %(message)s'
-    DEFAULT_SAVE_PATH = 'data/sessions'
+    HUMAN_LOGGING_FORMAT = "%(asctime)s [%(levelname)s] %(name)s :: %(message)s"
+    DEFAULT_SAVE_PATH = "data/sessions"
 
     def __init__(
         self,
@@ -141,19 +140,19 @@ class CollectorProxy(CartPoleBase):
 
     def save(self, path=None) -> Path:
         if path is None:
-            path = Path(self.DEFAULT_SAVE_PATH) / f'{self.data.meta.session_id}.json'
+            path = Path(self.DEFAULT_SAVE_PATH) / f"{self.data.meta.session_id}.json"
         path = Path(path)
         path.parent.mkdir(parents=True, exist_ok=True)
-        with open(path, 'w') as f:
+        with open(path, "w") as f:
             json.dump(dc.asdict(self.data), f)
-        LOGGER.info('Saved session %s to %s', self.data.meta.session_id, path)
+        LOGGER.info("Saved session %s to %s", self.data.meta.session_id, path)
         return path
 
     @contextmanager
     def time_trace(self, action=None):
         if action is None:
-            stack =  inspect.stack()
-            action = stack[1][3] if stack[1][3] != '__enter__' else stack[2][3]
+            stack = inspect.stack()
+            action = stack[1][3] if stack[1][3] != "__enter__" else stack[2][3]
         trace = SessionData.TimeTrace(action=action, start_timestamp=self._timestamp())
         yield trace
         trace.finish_timestamp = self._timestamp()
@@ -189,23 +188,27 @@ class CollectorProxy(CartPoleBase):
         timestamp = 0
         for line in log_lines:
             try:
-                time, message = line.split(' ', 1)
+                time, message = line.split(" ", 1)
                 timestamp = int(float(time) * 1000000)
-                self.data.logs.append(SessionData.Log(timestamp=timestamp, message=message))
+                self.data.logs.append(
+                    SessionData.Log(timestamp=timestamp, message=message)
+                )
             except ValueError:  # on float conversion
                 if len(self.data.logs) > 0:
-                    self.data.logs[-1].message += '\n' + message
+                    self.data.logs[-1].message += "\n" + message
 
         self._logging_stream.close()
         LOGGER.debug("Collected %s log messages", len(log_lines))
 
     def reset(self, config: Config) -> None:
-        self.data = SessionData(meta=SessionData.SessionMeta(
-            device_class=self.cart_pole.__class__.__name__,
-            device_config=config,
-            actor_class=self.actor_class.__name__,
-            actor_config=self.actor_config,
-        ))
+        self.data = SessionData(
+            meta=SessionData.SessionMeta(
+                device_class=self.cart_pole.__class__.__name__,
+                device_config=config,
+                actor_class=self.actor_class.__name__,
+                actor_config=self.actor_config,
+            )
+        )
         self._available_values = threading.Semaphore(0)
         self._init_logging()
 
@@ -221,7 +224,7 @@ class CollectorProxy(CartPoleBase):
             state = self.cart_pole.get_state()
 
         for field in dc.fields(state):
-            key = f'state.{field.name}'
+            key = f"state.{field.name}"
             value = getattr(state, field.name)
             if value is None:
                 continue
@@ -241,7 +244,7 @@ class CollectorProxy(CartPoleBase):
 
     def set_target(self, target: float) -> None:
         with self.time_trace() as trace:
-            key = 'target.acceleration'
+            key = "target.acceleration"
             self._add_value(key, trace.start_timestamp, target)
             LOGGER.info(f"Set target: {target}")
             return self.cart_pole.set_target(target)
@@ -261,13 +264,13 @@ class CollectorProxy(CartPoleBase):
 
     def meta(self) -> dict:
         if not self._started_flag.is_set():
-            raise RuntimeError('Session has not started yet')
+            raise RuntimeError("Session has not started yet")
         return dc.asdict(self.data)
 
     def consume_value(self) -> Tuple[dict, bool]:
         while True:
             if not self._started_flag.is_set():
-                raise ValueError('Session has finished')
+                raise ValueError("Session has finished")
             if self._available_values.acquire(timeout=1.0):
                 break
         for key, value in self.data.values.items():
@@ -283,7 +286,8 @@ class CollectorProxy(CartPoleBase):
                 return dc.asdict(vc)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+
     class FakeCartPole(CartPoleBase):
         def reset(self, config: Config) -> None:
             pass

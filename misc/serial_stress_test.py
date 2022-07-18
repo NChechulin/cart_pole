@@ -1,10 +1,10 @@
 import time
-
-from serial import Serial, PARITY_EVEN
 from os import environ as env
 from random import randint
 
-port = env.get('SERIAL_PORT', 'COM4')
+from serial import PARITY_EVEN, Serial
+
+port = env.get("SERIAL_PORT", "COM4")
 speed = 1_000_000
 serial = Serial(port=port, baudrate=speed, timeout=1)
 
@@ -18,8 +18,8 @@ while True:
     serial.flush()
     in_byte = serial.read(chunk_size)
     if byte != in_byte:
-        print(f'ERR: {byte} != {in_byte}')
-        print('Extra:', serial.read_all().decode(errors='ignore'))
+        print(f"ERR: {byte} != {in_byte}")
+        print("Extra:", serial.read_all().decode(errors="ignore"))
     else:
         ok_count += 1
         if ok_count == ok_window_size:
@@ -27,6 +27,8 @@ while True:
             delta = end - start
             start = end
             speed_kbitps = ok_window_size / delta * 8 / 1024 * chunk_size
-            print(f'{ok_window_size} ok packets in {delta:.3f} s = {speed_kbitps:.3f} kbit/s')
+            print(
+                f"{ok_window_size} ok packets in {delta:.3f} s = {speed_kbitps:.3f} kbit/s"
+            )
             ok_count = 0
     # print('OK')

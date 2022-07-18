@@ -1,14 +1,13 @@
 import json
+import logging
 
-from device.wire_interface import WireInterface, DeviceConfig
+from common.util import init_logging
+from device import CartPoleDevice
+from device.wire_interface import DeviceConfig, WireInterface
+from misc.analyzer._saleae import SaleaeAnalyzer
+from sessions.actor import Actor, OscillatingActor
 from sessions.collector import CollectorProxy
 from sessions.runner import Runner
-from sessions.actor import OscillatingActor, Actor
-from device import CartPoleDevice
-from common.util import init_logging
-from misc.analyzer._saleae import SaleaeAnalyzer
-
-import logging
 
 
 class NoActor(Actor):
@@ -18,12 +17,12 @@ class NoActor(Actor):
 
 def main():
 
-    device = CartPoleDevice(WireInterface('COM4'))
+    device = CartPoleDevice(WireInterface("COM4"))
     device_config = DeviceConfig(max_velocity=0.25, max_acceleration=1)
     actor_config = {
-        'device_config': device_config,
-        'acceleration': 0.5,
-        'max_position': 0.1
+        "device_config": device_config,
+        "acceleration": 0.5,
+        "max_position": 0.1,
     }
     runner = Runner(device, device_config, OscillatingActor, actor_config)
     analyzer = SaleaeAnalyzer()
@@ -32,14 +31,13 @@ def main():
 
     # runner.start_server()
     runner.run(100)
-    session_id = 'v3'
-    runner.proxy.save(f'data/sessions/{session_id}.json')
+    session_id = "v3"
+    runner.proxy.save(f"data/sessions/{session_id}.json")
     analyzer.export_analyzers()
-    with open(f'data/sessions/{session_id}-analyzer.json', 'w') as file:
+    with open(f"data/sessions/{session_id}-analyzer.json", "w") as file:
         json.dump(analyzer.data, file)
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     init_logging()
     main()

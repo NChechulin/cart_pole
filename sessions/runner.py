@@ -1,10 +1,10 @@
-from common.interface import CartPoleBase
 import logging
 from typing import Type
+
+from common.interface import CartPoleBase
 from sessions.actor import Actor
 from sessions.collector import CollectorProxy
 from web_view import server
-
 
 LOGGER = logging.getLogger(__name__)
 
@@ -27,10 +27,10 @@ class Runner:
             self.proxy.reset(self.cart_pole_config)
             self._loop(max_iterations)
         except Exception:
-            LOGGER.exception('Aborting run due to error')
+            LOGGER.exception("Aborting run due to error")
         finally:
             self.proxy.close()
-            LOGGER.info('Run finished')
+            LOGGER.info("Run finished")
 
     def start_server(self) -> None:
         server.run_server(self.proxy)
@@ -39,7 +39,7 @@ class Runner:
         actor = self.actor_class(**self.actor_config)
         current_iteration = 0
         while current_iteration != max_iterations:
-            with self.proxy.time_trace('iteration'):
+            with self.proxy.time_trace("iteration"):
                 state = self.proxy.get_state()
                 target = actor(state)
                 self.proxy.set_target(target)

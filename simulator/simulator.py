@@ -1,12 +1,12 @@
+import logging
+
+import numpy
 from pydrake.systems.analysis import Simulator
 
 from common import CartPoleBase, Error, State
 from simulator.system import CartPoleSystem
 
-import logging
-import numpy
-
-log = logging.getLogger('simulator')
+log = logging.getLogger("simulator")
 
 
 def clamp(value, limit):
@@ -20,7 +20,7 @@ def clamp(value, limit):
 
 
 class CartPoleSimulator(CartPoleBase):
-    '''
+    """
     Description:
         Сlass implements a physical simulation of the cart-pole device.
         A pole is attached by an joint to a cart, which moves along guide axis.
@@ -37,7 +37,7 @@ class CartPoleSimulator(CartPoleBase):
         The target is desired acceleration of cart.
     Technical details:
         Each environment runs its own isolated pybullet physics engine.
-    '''
+    """
 
     def __init__(self):
         self.system = CartPoleSystem()
@@ -59,9 +59,7 @@ class CartPoleSimulator(CartPoleBase):
         self.reset_to(config, State.home())
 
     def get_state(self):
-        return State.from_array(
-            self.context.get_continuous_state_vector()
-        )
+        return State.from_array(self.context.get_continuous_state_vector())
 
     def get_target(self):
         return self.target_acceleration
@@ -72,7 +70,7 @@ class CartPoleSimulator(CartPoleBase):
 
     def set_target(self, target):
         if self.error:
-            log.warning('set target, error=%s', self.error)
+            log.warning("set target, error=%s", self.error)
             return
 
         config = self.get_config()
@@ -84,7 +82,7 @@ class CartPoleSimulator(CartPoleBase):
             self.error = Error.A_OVERFLOW
             return
 
-        log.debug('set acc=%.2f', target)
+        log.debug("set acc=%.2f", target)
 
     def validate(self):
         state = self.get_state()
@@ -102,7 +100,7 @@ class CartPoleSimulator(CartPoleBase):
 
     def advance(self, delta):
         if self.error:
-            log.warning('advance, error=%i', self.error)
+            log.warning("advance, error=%i", self.error)
             return
 
         self.simulator.AdvanceTo(self.context.get_time() + delta)
@@ -115,7 +113,7 @@ class CartPoleSimulator(CartPoleBase):
 
     def get_info(self):
         return {
-            'time': self.context.GetTime(),
+            "time": self.context.GetTime(),
         }
 
     def close(self):

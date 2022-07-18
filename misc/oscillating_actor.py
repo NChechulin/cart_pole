@@ -3,7 +3,7 @@ from sessions.actor import Actor
 
 
 class OscillatingActor(Actor):
-    '''Sample actor that's trying to oscillate in given X range'''
+    """Sample actor that's trying to oscillate in given X range"""
 
     def __init__(self, device_config, acceleration, max_position, **_):
         super().__init__()

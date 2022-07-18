@@ -1,10 +1,10 @@
 from unittest import mock
 
-from common.interface import State, Config
+from common.interface import Config, State
 from device import CartPoleDevice
 
-
 EPS = 1e-6
+
 
 class TestCartPoleDevice:
     @staticmethod

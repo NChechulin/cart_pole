@@ -1,9 +1,11 @@
-from common.interface import State
-from sessions.actor import Actor
-from control import BalanceLQRControl, TrajectoryLQRControl, Trajectory
 from logging import getLogger
 
+from common.interface import State
+from control import BalanceLQRControl, Trajectory, TrajectoryLQRControl
+from sessions.actor import Actor
+
 logger = getLogger(__file__)
+
 
 class DemoActor(Actor):
     def __init__(self, config, **kwargs):
@@ -29,8 +31,18 @@ class DemoActor(Actor):
     def save_expected_state(self, stamp):
         state_expected, target_expected = self.trajectory(stamp)
         ts = self.proxy._timestamp()
-        self.proxy._add_value('expected.cart_position', ts, float(state_expected.cart_position))
-        self.proxy._add_value('expected.cart_velocity', ts, float(state_expected.cart_velocity))
-        self.proxy._add_value('expected.pole_angle', ts, float(state_expected.pole_angle))
-        self.proxy._add_value('expected.pole_angular_velocity', ts, float(state_expected.pole_angular_velocity))
-        self.proxy._add_value('expected.target', ts, float(target_expected))
+        self.proxy._add_value(
+            "expected.cart_position", ts, float(state_expected.cart_position)
+        )
+        self.proxy._add_value(
+            "expected.cart_velocity", ts, float(state_expected.cart_velocity)
+        )
+        self.proxy._add_value(
+            "expected.pole_angle", ts, float(state_expected.pole_angle)
+        )
+        self.proxy._add_value(
+            "expected.pole_angular_velocity",
+            ts,
+            float(state_expected.pole_angular_velocity),
+        )
+        self.proxy._add_value("expected.target", ts, float(target_expected))

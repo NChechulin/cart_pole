@@ -1,8 +1,7 @@
+import numpy
 from pydrake.math import cos, sin
 from pydrake.systems.framework import BasicVector_, LeafSystem_
 from pydrake.systems.scalar_conversion import TemplateSystem
-
-import numpy
 
 
 @TemplateSystem.define("CartPoleSystem")
@@ -11,10 +10,10 @@ def CartPoleSystem_(T):
     Parameters:
       g - gravity
       l – pole length
-      
+
     Input:
       u - target cart acceleration
-    
+
     State:
       x - cart position
       a - pole angle
@@ -30,9 +29,9 @@ def CartPoleSystem_(T):
             self.parameter_index = self.DeclareNumericParameter(parameter_default)
 
             self.state_index = self.DeclareContinuousState(4)
-            self.DeclareStateOutputPort('q', self.state_index)
+            self.DeclareStateOutputPort("q", self.state_index)
 
-            self.input_index = self.DeclareVectorInputPort('u', 1)
+            self.input_index = self.DeclareVectorInputPort("u", 1)
 
         def _construct_copy(self, other, converter=None):
             Impl._construct(self, converter=converter)
@@ -63,7 +62,9 @@ def CartPoleSystem_(T):
 
             params = context.get_mutable_numeric_parameter(self.parameter_index)
             params.SetFromVector(
-                numpy.array([config.gravity, config.pole_length, config.friction_coefficient])
+                numpy.array(
+                    [config.gravity, config.pole_length, config.friction_coefficient]
+                )
             )
 
             context.SetContinuousState(q)
