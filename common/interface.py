@@ -1,5 +1,6 @@
 import dataclasses as dc
 import enum
+from abc import ABC, abstractmethod
 from typing import Tuple
 
 import numpy as np
@@ -84,7 +85,7 @@ class State:
         )
 
 
-class CartPoleBase:
+class CartPoleBase(ABC):
     """
     Description:
         Сlass implements a physical simulation of the cart-pole device.
@@ -98,52 +99,60 @@ class CartPoleBase:
         A pole is at starting position 0 with no velocity and acceleration.
     """
 
+    @abstractmethod
     def reset(self, config: Config) -> None:
         """
         Resets the device to the initial state.
         The pole is at rest position and cart is centered.
         It must be called at the beginning of any session.
         """
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_state(self) -> State:
         """
         Returns current device state.
         """
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_info(self) -> dict:
         """
         Returns usefull debug information.
         """
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def get_target(self) -> float:
         """
         Returns current target acceleration.
         """
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def set_target(self, target: float) -> None:
         """
         Set desired target acceleration.
         """
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def advance(self, delta: float = None) -> None:
         """
         Advance the dynamic system by delta seconds.
         """
         pass
 
+    @abstractmethod
     def timestamp(self):
         """
         Current time.
         """
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def close(self) -> None:
         """
         Free all allocated resources.
         """
-        raise NotImplementedError
+        pass
