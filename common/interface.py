@@ -1,7 +1,9 @@
 import dataclasses as dc
 import enum
+from typing import Tuple
 
 import numpy as np
+import numpy.typing as npt
 
 
 class Error(enum.IntEnum):
@@ -35,7 +37,7 @@ class Config:
     pole_length: float = 0.2  # m
     pole_mass: float = 0.118  # kg
     gravity: float = 9.8  # m/s^2
-    friction_coefficient = 0
+    friction_coefficient: float = 0
 
 
 @dc.dataclass
@@ -48,17 +50,17 @@ class State:
     cart_acceleration: float = 0
 
     @staticmethod
-    def from_array(a):
+    def from_array(a: npt.NDArray[float]) -> "State":
         """
         q = (x, a, v, w)
         """
         return State(a[0], a[2], a[1], a[3])
 
     @staticmethod
-    def home():
+    def home() -> "State":
         return State(0.0, 0.0, 0.0, 0.0)
 
-    def as_tuple(self):
+    def as_tuple(self) -> Tuple[float, float, float, float]:
         return (
             self.cart_position,
             self.pole_angle,
@@ -66,13 +68,13 @@ class State:
             self.pole_angular_velocity,
         )
 
-    def as_array(self):
+    def as_array(self) -> npt.NDArray[float]:
         return np.array(self.as_tuple())
 
-    def as_array_4x1(self):
+    def as_array_4x1(self) -> npt.NDArray[float]:
         return self.as_array().reshape(4, 1)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "(x={x:+.2f}, v={v:+.2f}, a={a:+.2f}, w={w:+.2f}, err={err})".format(
             x=self.cart_position,
             v=self.cart_velocity,
