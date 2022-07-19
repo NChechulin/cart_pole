@@ -137,7 +137,7 @@ class CartPoleBase(ABC):
         pass
 
     @abstractmethod
-    def advance(self, delta: float = None) -> None:
+    def advance(self, delta: float) -> None:
         """
         Advance the dynamic system by delta seconds.
         """
