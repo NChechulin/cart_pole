@@ -22,8 +22,8 @@ def clamp(value, limit):
 class CartPoleSimulator(CartPoleBase):
     """
     Description:
-        Сlass implements a physical simulation of the cart-pole device.
-        A pole is attached by an joint to a cart, which moves along guide axis.
+        Class implements a physical simulation of the cart-pole device.
+        A pole is attached by a joint to a cart, which moves along guide axis.
         The pendulum is initially at rest state. The goal is to maintain it in
         upright pose by increasing and reducing the cart's velocity.
     Source:
